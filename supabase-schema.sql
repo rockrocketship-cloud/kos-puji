@@ -6,8 +6,8 @@ revoke all on public.kos_puji_owners from anon, authenticated;
 grant select on public.kos_puji_owners to authenticated;
 create policy kos_puji_owner_self on public.kos_puji_owners for select to authenticated
  using (user_id = (select auth.uid()));
-insert into public.kos_puji_owners(user_id)
- select user_id from public.app_roles where role='owner' on conflict do nothing;
+-- Owner Kos Puji didaftarkan manual, terpisah dari owner Lokalin:
+-- insert into public.kos_puji_owners(user_id) values ('<user_id>') on conflict do nothing;
 
 create table public.kos_puji_data (
  user_id uuid primary key references public.kos_puji_owners(user_id) on delete cascade,
