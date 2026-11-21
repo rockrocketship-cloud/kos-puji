@@ -6,7 +6,7 @@ Aplikasi aktif https://rockrocketship-cloud.github.io/kos-puji/
 
 ## Penyimpanan dan akses
 
-Data Kos Puji disimpan pada Supabase dalam tabel kos_puji_data. Tabel kos_puji_owners membatasi akses pada akun owner yang sudah terdaftar. Login menggunakan email dan kata sandi akun owner Lokalin di proyek Supabase yang sama. Mode contoh menggunakan penyimpanan browser.
+Data Kos Puji disimpan pada Supabase dalam tabel kos_puji_data. Tabel kos_puji_owners membatasi akses pada akun owner yang sudah terdaftar. Login menggunakan email dan kata sandi akun owner Kos Puji yang terdaftar pada tabel kos_puji_owners. Mode contoh menggunakan penyimpanan browser.
 
 Penyimpanan memakai nomor revisi agar perubahan bersamaan dari dua perangkat tidak saling menimpa. Saat terjadi konflik, tutup formulir, muat ulang data, lalu ulangi perubahan. Muat ulang otomatis berjalan setiap 60 detik saat formulir tertutup.
 

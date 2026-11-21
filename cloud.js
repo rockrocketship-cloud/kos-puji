@@ -39,7 +39,7 @@ async function refreshCloud(){
   const {data:row,error}=await cloud.from('kos_puji_data').select('*').eq('user_id',session.user.id).maybeSingle();
   if(error)throw error;
   if(generation!==authGeneration)return;
-  if(!row)throw new Error('Akun ini belum memiliki akses owner Kos Puji. Gunakan akun owner Lokalin.');
+  if(!row)throw new Error('Akun ini belum memiliki akses owner Kos Puji. Gunakan akun owner Kos Puji yang terdaftar.');
   cloudRecord=row;
   cloudError='';
  }catch(error){
