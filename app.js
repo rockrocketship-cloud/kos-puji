@@ -23,12 +23,21 @@ function data(){
  }
  return db;
 }
+const monthName=new Intl.DateTimeFormat('id-ID',{month:'short',timeZone:'UTC'}).format(new Date(period+'-01T00:00:00Z'));
+let currentBills=[];
+function rentLine(r){
+ const b=currentBills.find(x=>x.id===r.id&&x.tenant===r.tenant);
+ if(!b)return '';
+ if(!b.paid)return '<small class="noDate">Sewa '+monthName+': belum lunas</small>';
+ return '<small class="'+(b.paidAt?'paidOn':'noDate')+'">Sewa '+monthName+': '+(b.paidAt?'dibayar '+b.paidAt.split('-').reverse().join('/'):'lunas, tanggal belum dicatat')+'</small>';
+}
 function stat(label,value,detail){return '<div class="stat">'+label+'<strong>'+value+'</strong><small>'+detail+'</small></div>'}
 function render(){
  showAccess();
  $('add').disabled=!cloudReady();
  if(!cloudReady())return;
  const db=data(), billing=page==='Pembayaran', selected=month.value||period, bills=db.bills[selected]||[];
+ currentBills=db.bills[period]||[];
  const occupied=db.rooms.filter(r=>r.tenant).length;
  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
  const expensesPage=page==='Pengeluaran';
@@ -46,7 +55,7 @@ function render(){
  const status=r=>billing?(r.paid?'Lunas':'Belum lunas'):(r.tenant?'Terisi':'Kosong');
  const rows=records.filter(r=>filter==='Semua'||status(r)===filter);
  $('count').textContent=rows.length+(billing?' tagihan':' kamar');
- $('rows').innerHTML=rows.map(r=>'<div class="row"><span class="tile" aria-hidden="true">⌂</span><div><b>Kamar '+safe(r.name)+'</b><small>'+safe(r.tenant||'Belum ada penghuni')+'</small>'+(billing&&r.paid?'<small class="'+(r.paidAt?'paidOn':'noDate')+'">'+(r.paidAt?'Dibayar '+r.paidAt.split('-').reverse().join('/'):'Tanggal bayar belum dicatat')+'</small>':'')+'</div><span class="money">'+money(r.rate)+'</span><span class="pill '+(!r.paid&&billing?'due':'')+'">'+status(r)+'</span><button class="edit" data-id="'+safe(billing?r.billId:r.id)+'">'+(billing?(r.paid?'Batalkan lunas':'Catat lunas'):'Edit')+'</button>'+(billing&&r.paid?'<button class="edit dateBtn" data-pay="'+safe(r.billId)+'">'+(r.paidAt?'Ubah tanggal':'Isi tanggal')+'</button>':'')+'</div>').join('')||'<p class="empty">'+(billing?'Belum ada tagihan untuk pilihan ini.':'Belum ada kamar untuk pilihan ini.')+'</p>';
+ $('rows').innerHTML=rows.map(r=>'<div class="row"><span class="tile" aria-hidden="true">⌂</span><div><b>Kamar '+safe(r.name)+'</b><small>'+safe(r.tenant||'Belum ada penghuni')+'</small>'+(!billing&&r.tenant?rentLine(r):'')+(billing&&r.paid?'<small class="'+(r.paidAt?'paidOn':'noDate')+'">'+(r.paidAt?'Dibayar '+r.paidAt.split('-').reverse().join('/'):'Tanggal bayar belum dicatat')+'</small>':'')+'</div><span class="money">'+money(r.rate)+'</span><span class="pill '+(!r.paid&&billing?'due':'')+'">'+status(r)+'</span><button class="edit" data-id="'+safe(billing?r.billId:r.id)+'">'+(billing?(r.paid?'Batalkan lunas':'Catat lunas'):'Edit')+'</button>'+(billing&&r.paid?'<button class="edit dateBtn" data-pay="'+safe(r.billId)+'">'+(r.paidAt?'Ubah tanggal':'Isi tanggal')+'</button>':'')+'</div>').join('')||'<p class="empty">'+(billing?'Belum ada tagihan untuk pilihan ini.':'Belum ada kamar untuk pilihan ini.')+'</p>';
 }
 function editor(id=null){
  if(!cloudReady()||saving)return;
