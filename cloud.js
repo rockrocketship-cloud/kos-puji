@@ -39,11 +39,11 @@ function showAccess(){
 function authMessage(error){
  const code=error?.code||'', msg=(error?.message||'').toLowerCase(), status=error?.status;
  if(!navigator.onLine||msg.includes('failed to fetch')||msg.includes('network'))return 'Tidak ada koneksi internet. Periksa sinyal lalu coba lagi.';
+ if(code==='over_email_send_rate_limit'||msg.includes('email rate limit'))return 'Batas kirim email sedang tercapai. Coba lagi sekitar 1 jam lagi.';
  if(status===429||code==='over_request_rate_limit'||msg.includes('rate limit'))return 'Terlalu banyak percobaan. Tunggu sekitar 5 menit lalu coba lagi.';
  if(code==='invalid_credentials'||msg.includes('invalid login'))return 'Email atau kata sandi salah. Perhatikan huruf besar/kecil pada kata sandi.';
  if(code==='email_not_confirmed'||msg.includes('not confirmed'))return 'Email akun ini belum dikonfirmasi. Buka email konfirmasi dari Supabase terlebih dahulu.';
  if(msg.includes('not authorized')||code==='email_address_not_authorized')return 'Server email Supabase belum bisa mengirim ke alamat ini. Pemilik aplikasi perlu mengaktifkan Custom SMTP di Supabase.';
- if(code==='over_email_send_rate_limit'||msg.includes('email rate limit'))return 'Batas kirim email sedang tercapai. Coba lagi sekitar 1 jam lagi.';
  if(code==='same_password')return 'Kata sandi baru harus berbeda dari kata sandi lama.';
  if(code==='weak_password'||msg.includes('password should'))return 'Kata sandi baru terlalu lemah. Gunakan minimal 8 karakter campuran huruf dan angka.';
  return error?.message||'Terjadi kesalahan. Coba lagi.';
