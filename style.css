@@ -11,7 +11,7 @@ button,input,select{font:inherit}button,select{cursor:pointer}button{color:inher
 label>input,label>select{width:100%}
 .wide{width:100%}
 .hint{color:var(--muted);font-size:13px;line-height:1.5;margin:6px 0 0}
-#passwordError,#loginError{color:#a02929;font-size:14px;line-height:1.5;margin:8px 0 0}#loginError:empty,#passwordError:empty{display:none}
+#passwordError,#loginError,#recoveryError,#resetError{color:#a02929;font-size:14px;line-height:1.5;margin:8px 0 0}#loginError:empty,#passwordError:empty,#recoveryError:empty,#resetError:empty,#resetInfo:empty{display:none}
 .owner{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 body.signedOut #add,body.signedOut .toolbar select+button{display:none}
 .row .pill{justify-self:end}
@@ -45,3 +45,4 @@ body.signedOut #add,body.signedOut .toolbar select+button{display:none}
  .actions button{flex:1}
 }
 @media(max-width:360px){#stats:not(.expenseStats){grid-template-columns:1fr 1fr}#stats:not(.expenseStats) .stat:last-child{grid-column:span 2}nav button{font-size:11px}}
+.linkBtn{display:block;margin:14px auto 0;color:#235ca7;font-size:14px;font-weight:600;padding:8px 10px;border-radius:8px}

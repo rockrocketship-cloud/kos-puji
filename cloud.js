@@ -1,7 +1,13 @@
+const APP_URL=location.origin+location.pathname;
+const linkParams=new URLSearchParams(location.hash.slice(1)+'&'+location.search.slice(1));
+let recoveryPending=linkParams.get('type')==='recovery';
+const linkError=linkParams.get('error_code')||linkParams.get('error')?
+ (linkParams.get('error_code')==='otp_expired'?'Tautan reset kata sandi sudah kedaluwarsa atau sudah dipakai. Minta tautan baru lewat "Lupa kata sandi?".'
+  :'Tautan dari email tidak bisa dipakai: '+(linkParams.get('error_description')||linkParams.get('error'))):'';
 const cloud = window.supabase.createClient(
  'https://kwhtqqrzeifmntdtugvg.supabase.co',
  'sb_publishable_JGQ9jpXgEb3IMl0YjY3Txg_cQKy02Fs',
- {auth:{storageKey:'kos-puji-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}}
+ {auth:{storageKey:'kos-puji-auth',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'implicit'}}
 );
 let cloudRecord=null;
 let session=null;
@@ -125,6 +131,55 @@ async function initCloud(){
   showAccess();render();
  };
  $('refresh').onclick=refreshCloud;
+ if(linkError){$('loginError').textContent=linkError}
+ if(linkError||recoveryPending)history.replaceState(null,'',APP_URL);
+ const rf=$('resetForm');
+ $('forgotPassword').onclick=()=>{
+  rf.reset();$('resetError').textContent='';$('resetInfo').textContent='';
+  rf.elements.email.value=$('loginForm').elements.email.value.trim();
+  $('resetModal').showModal();
+ };
+ $('resetCancel').onclick=()=>$('resetModal').close();
+ rf.onsubmit=async e=>{
+  e.preventDefault();
+  const email=rf.elements.email.value.trim().toLowerCase(),button=rf.querySelector('button[type="submit"]');
+  $('resetError').textContent='';$('resetInfo').textContent='';
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return $('resetError').textContent='Isi email yang valid.';
+  button.disabled=true;
+  try{
+   const {error}=await cloud.auth.resetPasswordForEmail(email,{redirectTo:APP_URL});
+   if(error)throw error;
+   $('resetInfo').textContent='Jika email ini terdaftar, tautan reset sudah dikirim. Periksa kotak masuk dan folder Spam. Tautan hanya berlaku sekali.';
+  }catch(error){
+   $('resetError').textContent=authMessage(error);
+  }finally{button.disabled=false}
+ };
+ const nf=$('recoveryForm');
+ window.openRecovery=()=>{
+  if(!session||$('recoveryModal').open)return;
+  recoveryPending=false;
+  document.querySelectorAll('dialog[open]').forEach(d=>d.close());
+  nf.reset();$('recoveryError').textContent='';
+  $('recoveryAccount').textContent='Akun: '+session.user.email;
+  $('recoveryModal').showModal();
+ };
+ $('recoveryCancel').onclick=()=>{$('recoveryModal').close();refreshCloud()};
+ nf.onsubmit=async e=>{
+  e.preventDefault();
+  const f=nf.elements,out=$('recoveryError'),button=nf.querySelector('button[type="submit"]');
+  out.textContent='';
+  if(f.next.value.length<8)return out.textContent='Kata sandi baru minimal 8 karakter.';
+  if(f.next.value!==f.confirm.value)return out.textContent='Ulangan kata sandi baru tidak sama.';
+  button.disabled=true;
+  try{
+   const {error}=await cloud.auth.updateUser({password:f.next.value});
+   if(error)throw error;
+   nf.reset();$('recoveryModal').close();
+   alert('Kata sandi baru tersimpan. Anda sudah masuk.');
+   refreshCloud();
+  }catch(error){out.textContent=authMessage(error)}
+  finally{button.disabled=false}
+ };
  document.addEventListener('click',e=>{
   const b=e.target.closest('.showPw');if(!b)return;
   const input=b.previousElementSibling,show=input.type==='password';
@@ -185,11 +240,15 @@ async function initCloud(){
    session=null;cloudRecord=null;
    document.querySelectorAll('dialog[open]').forEach(d=>d.close());
    showAccess();render();
+  }else if(event==='PASSWORD_RECOVERY'){
+   session=next;
+   setTimeout(()=>window.openRecovery?.(),0);
   }else if(event==='SIGNED_IN'){
    setTimeout(refreshCloud,0);
   }
  });
  await refreshCloud();
+ if(recoveryPending&&session)window.openRecovery();
  setInterval(()=>{if(mode.value==='real')refreshCloud()},60000);
  window.addEventListener('focus',()=>{if(mode.value==='real')refreshCloud()});
 }
