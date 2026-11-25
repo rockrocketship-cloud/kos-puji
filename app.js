@@ -155,3 +155,18 @@ expenseForm.onsubmit=async e=>{
  render();
 };
 window.addEventListener('storage',()=>{if(mode.value==='demo')render()});render();initCloud();
+(()=>{
+ const mine=document.querySelector('script[src^="app.js"]')?.getAttribute('src');
+ let checking=false;
+ async function checkUpdate(){
+  if(checking||saving||document.querySelector('dialog[open]'))return;
+  checking=true;
+  try{
+   const html=await fetch(location.pathname+'?u='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'');
+   const latest=html.match(/src="(app\.js\?v=[^"]+)"/)?.[1];
+   if(latest&&mine&&latest!==mine)location.replace(location.pathname+'?v='+encodeURIComponent(latest.split('=')[1]));
+  }catch{}finally{checking=false}
+ }
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate()});
+ setTimeout(checkUpdate,3000);
+})();
