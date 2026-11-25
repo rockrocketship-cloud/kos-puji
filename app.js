@@ -79,6 +79,7 @@ form.onsubmit=async e=>{
  if(await save(db)){$('modal').close();render();}
 };
 const expenseForm=$('expenseForm');
+const field=name=>expenseForm.elements.namedItem(name);
 const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Makassar',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
 let expenseId=null;
 function renderExpenses(db,selected){
@@ -98,22 +99,21 @@ function expenseEditor(id=null){
  const entry=data().expenses.find(x=>x.id===id);
  expenseId=id;
  expenseForm.reset();
- const fields=expenseForm.elements;
- fields.day.max=today;
+ field('day').max=today;
  const selected=month.value||period;
- fields.day.value=selected===period?today:selected+'-01';
- if(entry)for(const key of ['item','category','day','amount'])fields[key].value=entry[key];
+ field('day').value=selected===period?today:selected+'-01';
+ if(entry)for(const key of ['item','category','day','amount'])field(key).value=entry[key];
  $('expenseTitle').textContent=id?'Edit pengeluaran':'Tambah pengeluaran';
  $('expenseModal').showModal();
 }
 $('expenseCancel').onclick=()=>$('expenseModal').close();
 expenseForm.onsubmit=async e=>{
  e.preventDefault();if(!cloudReady()||saving)return;
- const fields=expenseForm.elements;
- const item=fields.item.value.trim(),amount=Number(fields.amount.value);
+ const item=field('item').value.trim(),amount=Number(field('amount').value),day=field('day').value;
  if(!item||!Number.isSafeInteger(amount)||amount<1)return alert('Periksa nama item dan jumlah pengeluaran.');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return alert('Pilih tanggal pengeluaran.');
  const db=data();
- const entry={id:expenseId||crypto.randomUUID(),item,amount,category:fields.category.value,day:fields.day.value};
+ const entry={id:expenseId||crypto.randomUUID(),item,amount,category:field('category').value,day};
  const index=db.expenses.findIndex(x=>x.id===entry.id);
  if(index>=0)db.expenses[index]=entry;else db.expenses.push(entry);
  if(!await save(db))return;

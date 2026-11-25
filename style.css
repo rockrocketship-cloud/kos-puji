@@ -46,3 +46,6 @@ body.signedOut #add,body.signedOut .toolbar select+button{display:none}
 }
 @media(max-width:360px){#stats:not(.expenseStats){grid-template-columns:1fr 1fr}#stats:not(.expenseStats) .stat:last-child{grid-column:span 2}nav button{font-size:11px}}
 .linkBtn{display:block;margin:14px auto 0;color:#235ca7;font-size:14px;font-weight:600;padding:8px 10px;border-radius:8px}
+input[type=date],input[type=month]{-webkit-appearance:none;appearance:none;display:block;width:100%;max-width:100%;text-align:left}
+input[type=date]::-webkit-date-and-time-value,input[type=month]::-webkit-date-and-time-value{text-align:left}
+.panelhead input[type=month]{width:auto}
