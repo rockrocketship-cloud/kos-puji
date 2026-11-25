@@ -49,3 +49,9 @@ body.signedOut #add,body.signedOut .toolbar select+button{display:none}
 input[type=date],input[type=month]{-webkit-appearance:none;appearance:none;display:block;width:100%;max-width:100%;text-align:left}
 input[type=date]::-webkit-date-and-time-value,input[type=month]::-webkit-date-and-time-value{text-align:left}
 .panelhead input[type=month]{width:auto}
+.paidOn{color:#2c7a4b!important}
+.row .dateBtn{font-size:12px;padding:6px 10px;min-height:32px}
+@media(min-width:1051px){.row{grid-template-columns:44px minmax(120px,1.4fr) minmax(100px,1fr) auto auto auto}}
+@media(max-width:1050px) and (min-width:701px){.row .dateBtn{grid-column:3;grid-row:2}}
+@media(max-width:700px){.row .dateBtn{grid-column:2;grid-row:3;justify-self:start}}
+.noDate{color:#8a5d0d!important}

@@ -46,7 +46,7 @@ function render(){
  const status=r=>billing?(r.paid?'Lunas':'Belum lunas'):(r.tenant?'Terisi':'Kosong');
  const rows=records.filter(r=>filter==='Semua'||status(r)===filter);
  $('count').textContent=rows.length+(billing?' tagihan':' kamar');
- $('rows').innerHTML=rows.map(r=>'<div class="row"><span class="tile" aria-hidden="true">⌂</span><div><b>Kamar '+safe(r.name)+'</b><small>'+safe(r.tenant||'Belum ada penghuni')+'</small></div><span class="money">'+money(r.rate)+'</span><span class="pill '+(!r.paid&&billing?'due':'')+'">'+status(r)+'</span><button class="edit" data-id="'+safe(billing?r.billId:r.id)+'">'+(billing?(r.paid?'Batalkan lunas':'Catat lunas'):'Edit')+'</button></div>').join('')||'<p class="empty">'+(billing?'Belum ada tagihan untuk pilihan ini.':'Belum ada kamar untuk pilihan ini.')+'</p>';
+ $('rows').innerHTML=rows.map(r=>'<div class="row"><span class="tile" aria-hidden="true">⌂</span><div><b>Kamar '+safe(r.name)+'</b><small>'+safe(r.tenant||'Belum ada penghuni')+'</small>'+(billing&&r.paid?'<small class="'+(r.paidAt?'paidOn':'noDate')+'">'+(r.paidAt?'Dibayar '+r.paidAt.split('-').reverse().join('/'):'Tanggal bayar belum dicatat')+'</small>':'')+'</div><span class="money">'+money(r.rate)+'</span><span class="pill '+(!r.paid&&billing?'due':'')+'">'+status(r)+'</span><button class="edit" data-id="'+safe(billing?r.billId:r.id)+'">'+(billing?(r.paid?'Batalkan lunas':'Catat lunas'):'Edit')+'</button>'+(billing&&r.paid?'<button class="edit dateBtn" data-pay="'+safe(r.billId)+'">'+(r.paidAt?'Ubah tanggal':'Isi tanggal')+'</button>':'')+'</div>').join('')||'<p class="empty">'+(billing?'Belum ada tagihan untuk pilihan ini.':'Belum ada kamar untuk pilihan ini.')+'</p>';
 }
 function editor(id=null){
  if(!cloudReady()||saving)return;
@@ -61,11 +61,35 @@ mode.onchange=()=>{filter='Semua';render();if(mode.value==='real')refreshCloud()
 month.onchange=render;$('add').onclick=()=>page==='Pengeluaran'?expenseEditor():editor();$('cancel').onclick=()=>$('modal').close();
 $('rows').onclick=async e=>{
  if(!cloudReady()||saving)return;
+ if(e.target.dataset.pay)return payEditor(e.target.dataset.pay);
  const id=e.target.dataset.id;if(!id)return;
  if(page==='Pengeluaran')return expenseEditor(id);
  if(page!=='Pembayaran')return editor(id);
  const db=data(),b=db.bills[month.value].find(x=>x.billId===id);
- if(confirm((b.paid?'Batalkan pelunasan':'Catat pembayaran lunas')+' untuk '+b.tenant+' sebesar '+money(b.rate)+'?')){b.paid=!b.paid;if(await save(db))render()}
+ if(!b.paid)return payEditor(id);
+ if(confirm('Batalkan pelunasan untuk '+b.tenant+' sebesar '+money(b.rate)+'?')){b.paid=false;delete b.paidAt;if(await save(db))render()}
+};
+let payId=null;
+function payEditor(id){
+ if(!cloudReady()||saving)return;
+ const b=data().bills[month.value]?.find(x=>x.billId===id);if(!b)return;
+ payId=id;
+ const input=$('payForm').elements.namedItem('paidAt');
+ input.max=today;
+ input.value=b.paidAt||(month.value===period?today:month.value+'-01');
+ $('payInfo').textContent=b.tenant+' · Kamar '+b.name+' · '+money(b.rate);
+ $('payTitle').textContent=b.paid?'Ubah tanggal bayar':'Catat pembayaran lunas';
+ $('payModal').showModal();
+}
+$('payCancel').onclick=()=>$('payModal').close();
+$('payForm').onsubmit=async e=>{
+ e.preventDefault();if(!cloudReady()||saving)return;
+ const day=$('payForm').elements.namedItem('paidAt').value;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return alert('Pilih tanggal pembayaran.');
+ if(day>today)return alert('Tanggal bayar tidak boleh melewati hari ini.');
+ const db=data(),b=db.bills[month.value]?.find(x=>x.billId===payId);if(!b)return;
+ b.paid=true;b.paidAt=day;
+ if(await save(db)){$('payModal').close();render()}
 };
 form.onsubmit=async e=>{
  e.preventDefault();if(!cloudReady()||saving)return;const db=data(),name=form.room.value.trim(),tenant=form.tenant.value.trim(),rate=Number(form.rate.value);
