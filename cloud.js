@@ -21,10 +21,24 @@ function showAccess(){
  $('loginPanel').hidden=!real||Boolean(session);
  $('workspace').hidden=real&&!cloudRecord;
  $('logout').hidden=!session;
+ $('changePassword').hidden=!session;
+ $('account').textContent=session?.user?.email||'Pengelola';
+ $('account').title=session?.user?.email||'';
+ document.body.classList.toggle('signedOut',real&&!session);
  $('refresh').hidden=!real||!session;
  $('importLocal').hidden=!real||!cloudRecord||!localStorage.getItem('kos-puji-v1-real');
  if(real)notice(cloudError||(!session?'Masuk untuk mengakses data Kos Puji.':!cloudRecord?'Memuat data…':'Tersimpan di Supabase'));
  else notice('Mode contoh · tersimpan di browser ini');
+}
+function authMessage(error){
+ const code=error?.code||'', msg=(error?.message||'').toLowerCase(), status=error?.status;
+ if(!navigator.onLine||msg.includes('failed to fetch')||msg.includes('network'))return 'Tidak ada koneksi internet. Periksa sinyal lalu coba lagi.';
+ if(status===429||code==='over_request_rate_limit'||msg.includes('rate limit'))return 'Terlalu banyak percobaan. Tunggu sekitar 5 menit lalu coba lagi.';
+ if(code==='invalid_credentials'||msg.includes('invalid login'))return 'Email atau kata sandi salah. Perhatikan huruf besar/kecil pada kata sandi.';
+ if(code==='email_not_confirmed'||msg.includes('not confirmed'))return 'Email akun ini belum dikonfirmasi. Buka email konfirmasi dari Supabase terlebih dahulu.';
+ if(code==='same_password')return 'Kata sandi baru harus berbeda dari kata sandi lama.';
+ if(code==='weak_password'||msg.includes('password should'))return 'Kata sandi baru terlalu lemah. Gunakan minimal 8 karakter campuran huruf dan angka.';
+ return error?.message||'Terjadi kesalahan. Coba lagi.';
 }
 async function refreshCloud(){
  if(loading||saving||document.querySelector('dialog[open]'))return;
@@ -43,7 +57,7 @@ async function refreshCloud(){
   cloudRecord=row;
   cloudError='';
  }catch(error){
-  cloudError=error.message||'Gagal memuat data. Periksa koneksi lalu tekan Muat ulang.';
+  cloudError=error.message&&!/fetch|network/i.test(error.message)?error.message:'Gagal memuat data. Periksa koneksi lalu tekan Muat ulang.';
  }finally{
   loading=false;
   showAccess();
@@ -92,13 +106,13 @@ async function initCloud(){
   $('loginError').textContent='';
   try{
    const {error}=await cloud.auth.signInWithPassword({
-    email:f.elements.email.value.trim(),password:f.elements.password.value
+    email:f.elements.email.value.trim().toLowerCase(),password:f.elements.password.value
    });
    if(error)throw error;
    f.elements.password.value='';
    await refreshCloud();
   }catch(error){
-   $('loginError').textContent='Gagal masuk. Periksa email, kata sandi, dan koneksi Anda.';
+   $('loginError').textContent=authMessage(error);
   }finally{button.disabled=false}
  };
  $('logout').onclick=async()=>{
@@ -111,6 +125,45 @@ async function initCloud(){
   showAccess();render();
  };
  $('refresh').onclick=refreshCloud;
+ document.addEventListener('click',e=>{
+  const b=e.target.closest('.showPw');if(!b)return;
+  const input=b.previousElementSibling,show=input.type==='password';
+  input.type=show?'text':'password';b.textContent=show?'Tutup':'Lihat';
+ });
+ const pf=$('passwordForm');
+ $('changePassword').onclick=()=>{
+  if(!session||saving)return;
+  pf.reset();$('passwordError').textContent='';
+  pf.querySelectorAll('.showPw').forEach(b=>{b.textContent='Lihat';b.previousElementSibling.type='password'});
+  $('passwordAccount').textContent='Akun: '+session.user.email;
+  $('passwordModal').showModal();
+ };
+ $('passwordCancel').onclick=()=>$('passwordModal').close();
+ pf.onsubmit=async e=>{
+  e.preventDefault();
+  const f=pf.elements,button=pf.querySelector('button[type="submit"]'),out=$('passwordError');
+  out.textContent='';
+  if(!f.current.value)return out.textContent='Isi kata sandi saat ini.';
+  if(f.next.value.length<8)return out.textContent='Kata sandi baru minimal 8 karakter.';
+  if(f.next.value!==f.confirm.value)return out.textContent='Ulangan kata sandi baru tidak sama.';
+  if(f.next.value===f.current.value)return out.textContent='Kata sandi baru harus berbeda dari kata sandi lama.';
+  button.disabled=true;
+  try{
+   const email=session.user.email;
+   const check=await cloud.auth.signInWithPassword({email,password:f.current.value});
+   if(check.error){
+    throw check.error.code==='invalid_credentials'||/invalid login/i.test(check.error.message)
+     ?new Error('Kata sandi saat ini salah.'):check.error;
+   }
+   const {error}=await cloud.auth.updateUser({password:f.next.value});
+   if(error)throw error;
+   pf.reset();
+   $('passwordModal').close();
+   alert('Kata sandi berhasil diganti. Gunakan kata sandi baru saat masuk berikutnya.');
+  }catch(error){
+   out.textContent=error.message==='Kata sandi saat ini salah.'?error.message:authMessage(error);
+  }finally{button.disabled=false}
+ };
  $('importLocal').onclick=async()=>{
   if(saving||!cloudRecord)return;
   const current=cloudRecord.payload;

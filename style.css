@@ -6,3 +6,42 @@ button,input,select{font:inherit}button,select{cursor:pointer}button{color:inher
 @media(max-width:700px){header{position:relative;width:100%;height:76px;padding:16px 20px;border-right:0;border-bottom:1px solid var(--line);flex-direction:row;align-items:center;justify-content:space-between}.brand{font-size:24px}.logo{height:38px;width:38px;line-height:38px}.owner{margin:0;padding:0;border:0;font-size:13px}nav{position:fixed;left:0;right:0;bottom:0;z-index:10;flex-direction:row;gap:4px;margin:0;padding:10px 8px calc(10px + env(safe-area-inset-bottom));background:#fffffff5;backdrop-filter:blur(14px);border-top:1px solid var(--line);box-shadow:0 -4px 24px #15345908}nav button{flex:1;text-align:center;font-size:13px;padding:15px 2px;border-radius:10px}nav button.active::before{display:none}main{margin:0;padding:18px 16px 110px}.hero{padding:26px 23px;min-height:180px;border-radius:20px}.hero h1{font-size:31px}.hero p{max-width:240px;font-size:14px;line-height:1.6}#date{font-size:13px}.art{width:180px;right:-45px;opacity:.2}.toolbar{margin:20px 0;gap:8px}.toolbar select{font-size:14px;max-width:45%;padding-left:11px}.primary{font-size:14px;padding:12px 14px}#stats{gap:8px}.stat{padding:15px 10px;font-size:12px;border-radius:14px}.stat strong{font-size:29px;margin:10px 0 6px}.stat small{font-size:12px}.panel{padding:18px 15px;border-radius:17px;margin-top:20px}.panelhead{align-items:center}h2{font-size:20px}.panelhead input{max-width:142px;font-size:14px;padding:10px 8px}.row{grid-template-columns:36px 1fr auto;gap:6px 10px;padding:17px 0}.tile{line-height:38px;font-size:23px}.row .pill{grid-column:3;grid-row:1}.row .edit{grid-column:3;grid-row:2}.row b{font-size:15px}.row small{font-size:13px}.row .money{font-size:14px}.pill{font-size:12px;padding:5px 7px}.edit{padding:9px 11px}.filters{margin:18px 0 13px}.expenseRow{flex-wrap:wrap;gap:9px 12px}.expenseRow div{flex-basis:60%}.expenseRow strong{font-size:14px}.expenseRow .edit{margin-left:auto}.expenseStats .stat{padding:22px}.expenseStats .stat strong{font-size:34px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 [hidden]{display:none!important}.cloudToolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 0 20px;font-size:14px;color:var(--muted)}#loginPanel{max-width:480px;margin:24px auto}#loginPanel p{line-height:1.6;color:var(--muted)}#loginError{color:#a02929!important}button:disabled{opacity:.55;cursor:wait}.row>div{overflow-wrap:anywhere;min-width:0}
+/* Login, ganti kata sandi, dan perbaikan tampilan HP */
+.pw{position:relative;display:block}.pw input{width:100%;padding-right:72px}.showPw{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:#235ca7;padding:8px 10px;border-radius:8px}
+label>input,label>select{width:100%}
+.wide{width:100%}
+.hint{color:var(--muted);font-size:13px;line-height:1.5;margin:6px 0 0}
+#passwordError,#loginError{color:#a02929;font-size:14px;line-height:1.5;margin:8px 0 0}#loginError:empty,#passwordError:empty{display:none}
+.owner{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.signedOut #add,body.signedOut .toolbar select+button{display:none}
+.row .pill{justify-self:end}
+.cloudToolbar>div{display:flex;flex-wrap:wrap;gap:8px}
+@media(max-width:700px){
+ header{height:auto;min-height:64px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;position:sticky;top:0;z-index:8;background:#fff}
+ .brand{font-size:21px;gap:9px}.logo{width:34px;height:34px;font-size:27px;line-height:34px;border-radius:11px}
+ .owner{max-width:46vw;font-size:12px}
+ main{padding:14px 14px calc(96px + env(safe-area-inset-bottom))}
+ .hero{min-height:0;padding:18px 20px;border-radius:18px}
+ .hero h1{font-size:25px;letter-spacing:-.8px;margin-bottom:6px}
+ .hero p{max-width:none;font-size:13px;line-height:1.45}
+ #date{font-size:12px;margin-bottom:8px}
+ .art{display:none}
+ .toolbar{margin:14px 0}
+ .toolbar select{max-width:none;flex:1}
+ .primary{white-space:nowrap}
+ .cloudToolbar{margin:0 0 12px;font-size:13px;gap:8px}
+ .cloudToolbar>div{width:100%}
+ .cloudToolbar .edit{flex:1;min-height:42px;padding:9px 8px;font-size:13px}
+ #loginPanel{margin:8px 0 0}
+ body.signedOut .hero p{display:none}
+ #stats{gap:8px}.stat strong{font-size:26px}
+ .panel{margin-top:14px}
+ .panelhead{flex-wrap:wrap}
+ nav{padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+ nav button{font-size:12px;padding:13px 0;min-height:48px}
+ dialog{padding:22px 18px;border-radius:18px;max-height:calc(100dvh - 24px);overflow:auto}
+ dialog label{margin:14px 0}
+ .actions{position:sticky;bottom:-22px;background:white;padding-bottom:4px}
+ .actions button{flex:1}
+}
+@media(max-width:360px){#stats:not(.expenseStats){grid-template-columns:1fr 1fr}#stats:not(.expenseStats) .stat:last-child{grid-column:span 2}nav button{font-size:11px}}
