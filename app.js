@@ -55,14 +55,32 @@ function render(){
  const status=r=>billing?(r.paid?'Lunas':'Belum lunas'):(r.tenant?'Terisi':'Kosong');
  const rows=records.filter(r=>filter==='Semua'||status(r)===filter);
  $('count').textContent=rows.length+(billing?' tagihan':' kamar');
- $('rows').innerHTML=rows.map(r=>'<div class="row"><span class="tile" aria-hidden="true">⌂</span><div><b>Kamar '+safe(r.name)+'</b><small>'+safe(r.tenant||'Belum ada penghuni')+'</small>'+(!billing&&r.tenant?rentLine(r):'')+(billing&&r.paid?'<small class="'+(r.paidAt?'paidOn':'noDate')+'">'+(r.paidAt?'Dibayar '+r.paidAt.split('-').reverse().join('/'):'Tanggal bayar belum dicatat')+'</small>':'')+'</div><span class="money">'+money(r.rate)+'</span><span class="pill '+(!r.paid&&billing?'due':'')+'">'+status(r)+'</span><button class="edit" data-id="'+safe(billing?r.billId:r.id)+'">'+(billing?(r.paid?'Batalkan lunas':'Catat lunas'):'Edit')+'</button>'+(billing&&r.paid?'<button class="edit dateBtn" data-pay="'+safe(r.billId)+'">'+(r.paidAt?'Ubah tanggal':'Isi tanggal')+'</button>':'')+'</div>').join('')||'<p class="empty">'+(billing?'Belum ada tagihan untuk pilihan ini.':'Belum ada kamar untuk pilihan ini.')+'</p>';
+ $('rows').innerHTML=rows.map(r=>'<div class="row"><span class="tile" aria-hidden="true">⌂</span><div><b>Kamar '+safe(r.name)+'</b><small>'+safe(r.tenant||'Belum ada penghuni')+'</small>'+sinceLine(r,billing,selected)+(!billing&&r.tenant?rentLine(r):'')+(billing&&r.paid?'<small class="'+(r.paidAt?'paidOn':'noDate')+'">'+(r.paidAt?'Dibayar '+r.paidAt.split('-').reverse().join('/'):'Tanggal bayar belum dicatat')+'</small>':'')+'</div><span class="money">'+money(r.rate)+'</span><span class="pill '+(!r.paid&&billing?'due':'')+'">'+status(r)+'</span><button class="edit" data-id="'+safe(billing?r.billId:r.id)+'">'+(billing?(r.paid?'Batalkan lunas':'Catat lunas'):'Edit')+'</button>'+(billing&&r.paid?'<button class="edit dateBtn" data-pay="'+safe(r.billId)+'">'+(r.paidAt?'Ubah tanggal':'Isi tanggal')+'</button>':'')+'</div>').join('')||'<p class="empty">'+(billing?'Belum ada tagihan untuk pilihan ini.':'Belum ada kamar untuk pilihan ini.')+'</p>';
 }
 function editor(id=null){
  if(!cloudReady()||saving)return;
  editing=id;form.reset();const r=data().rooms.find(x=>x.id===id);
  $('formTitle').textContent=r?'Edit kamar':'Tambah kamar';
  if(r){form.room.value=r.name;form.rate.value=r.rate;form.tenant.value=r.tenant}
+
+ form.since.value=r?.since||(r?.tenant?'':today);
+ sinceVisibility();
  $('modal').showModal();
+}
+function sinceVisibility(){const show=Boolean(form.tenant.value.trim());$('sinceLabel').hidden=!show;$('sinceHint').hidden=!show;if(show&&!form.since.value)form.since.value=today}
+form.tenant.addEventListener('input',sinceVisibility);
+function sinceLine(r,billing,ym){
+ if(!r.tenant||!r.since)return '';
+ if(!billing)return '<small>Sewa sejak '+fmtDate(r.since)+' · jatuh tempo tiap tgl '+Number(r.since.slice(8))+'</small>';
+ if(r.paid)return '';
+ const due=dueDate(r.since,ym),late=due<today;
+ return '<small class="'+(late?'late':'')+'">'+(late?'Terlambat · jatuh tempo ':'Jatuh tempo ')+fmtDate(due)+'</small>';
+}
+const fmtDate=d=>d.split('-').reverse().join('/');
+function dueDate(since,ym){
+ const day=Number(since.slice(8,10)),[y,m]=ym.split('-').map(Number);
+ const last=new Date(Date.UTC(y,m,0)).getUTCDate();
+ return ym+'-'+String(Math.min(day,last)).padStart(2,'0');
 }
 document.querySelector('nav').onclick=e=>{if(!e.target.dataset.page)return;page=e.target.dataset.page;filter='Semua';if(page!=='Pembayaran')month.value=period;render()};
 $('filters').onclick=e=>{if(e.target.tagName==='BUTTON'){filter=e.target.textContent;render()}};
@@ -101,9 +119,10 @@ $('payForm').onsubmit=async e=>{
  if(await save(db)){$('payModal').close();render()}
 };
 form.onsubmit=async e=>{
- e.preventDefault();if(!cloudReady()||saving)return;const db=data(),name=form.room.value.trim(),tenant=form.tenant.value.trim(),rate=Number(form.rate.value);
+ e.preventDefault();if(!cloudReady()||saving)return;const db=data(),name=form.room.value.trim(),tenant=form.tenant.value.trim(),rate=Number(form.rate.value),since=tenant?form.since.value:'';
+ if(tenant&&!/^\d{4}-\d{2}-\d{2}$/.test(since))return alert('Isi tanggal mulai sewa.');
  if(!name||db.rooms.some(r=>r.id!==editing&&r.name.toLowerCase()===name.toLowerCase()))return alert('Gunakan nama kamar yang unik.');
- const r={id:editing||crypto.randomUUID(),name,tenant,rate};
+ const r={id:editing||crypto.randomUUID(),name,tenant,rate,since};
  const old=db.rooms.find(x=>x.id===editing);
  if(old)Object.assign(old,r);else db.rooms.push(r);
  const bills=db.bills[period],bill=bills.find(b=>b.id===r.id&&b.tenant===tenant);
