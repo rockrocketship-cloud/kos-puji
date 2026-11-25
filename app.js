@@ -63,11 +63,11 @@ function editor(id=null){
  $('formTitle').textContent=r?'Edit kamar':'Tambah kamar';
  if(r){form.room.value=r.name;form.rate.value=r.rate;form.tenant.value=r.tenant}
 
- form.since.value=r?.since||(r?.tenant?'':today);
+ form.since.value=r?.since||'';
  sinceVisibility();
  $('modal').showModal();
 }
-function sinceVisibility(){const show=Boolean(form.tenant.value.trim());$('sinceLabel').hidden=!show;$('sinceHint').hidden=!show;if(show&&!form.since.value)form.since.value=today}
+function sinceVisibility(){if(form.tenant.value.trim()&&!form.since.value)form.since.value=today}
 form.tenant.addEventListener('input',sinceVisibility);
 function sinceLine(r,billing,ym){
  if(!r.tenant||!r.since)return '';
